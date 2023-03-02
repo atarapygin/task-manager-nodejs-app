@@ -20,8 +20,34 @@ router.post("/tasks", auth, async (req, res) => {
 });
 
 router.get("/tasks", auth, async (req, res) => {
+  const match = {};
+  const options = {};
+  const sort = {};
+
+  if (req.query.completed) {
+    match.completed = req.query.completed === "true";
+  }
+
+  if (req.query.limit) {
+    options.limit = parseInt(req.query.limit) || 0;
+  }
+
+  if (req.query.skip) {
+    options.skip = parseInt(req.query.skip) || 0;
+  }
+
+  if (req.query.sortBy) {
+    const parts = req.query.sortBy.split(":");
+    sort[parts[0]] = parts[1] === "desc" ? -1 : 1;
+  }
+
   try {
-    await req.user.populate("tasks");
+    await req.user.populate({
+      path: "tasks",
+      match,
+      options,
+      sort,
+    });
     res.send(req.user.tasks);
   } catch (err) {
     res.status(500).send();
